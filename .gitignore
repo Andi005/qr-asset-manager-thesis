@@ -34,3 +34,7 @@ application-local.yml
 .claude/settings.local.json
 CLAUDE.local.md
 
+.neon
+node_modules/
+.env.local
+.env.*

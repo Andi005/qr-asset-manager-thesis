@@ -63,8 +63,9 @@ All settings come from environment variables. No secrets are stored in the repos
 
 | Variable | Default | What |
 |---|---|---|
-| `DB_URL` | `jdbc:postgresql://localhost:5432/qram` | JDBC URL of the PostgreSQL database |
-| `DB_USER` / `DB_PASSWORD` | `qram` / `qram` | database credentials |
+| `DATABASE_URL` / `DATABASE_URL_UNPOOLED` | none | Neon's pooled (app queries) and direct (migrations) `postgresql://` URLs, used when `DB_URL` is not set ([deployment](docs/deployment.md#1-database-on-neon)) |
+| `DB_URL` | `jdbc:postgresql://localhost:5432/qram` | JDBC URL of the PostgreSQL database (takes precedence) |
+| `DB_USER` / `DB_PASSWORD` | `qram` / `qram` | database credentials for `DB_URL` |
 | `APP_BASE_URL` | `http://localhost:8080` | public address printed on QR labels (must be final before printing) |
 | `ADMIN_INITIAL_PASSWORD` | random, printed to the log | password of the first `admin` account (only used on an empty database) |
 | `SPRING_PROFILES_ACTIVE` | none | `demo` loads the fictional demo data into an empty database |

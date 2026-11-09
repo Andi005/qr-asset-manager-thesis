@@ -12,11 +12,11 @@ services:
     autoDeployTrigger: checksPass
     envVars:
       # Values marked sync: false are typed in the Render dashboard, never stored in Git.
-      - key: DB_URL
+      # Neon's two connection strings, exactly as `neon env pull` writes them to .env.local:
+      # the pooled one serves the app's queries, the direct one runs the Flyway migrations.
+      - key: DATABASE_URL
         sync: false
-      - key: DB_USER
-        sync: false
-      - key: DB_PASSWORD
+      - key: DATABASE_URL_UNPOOLED
         sync: false
       - key: APP_BASE_URL
         sync: false

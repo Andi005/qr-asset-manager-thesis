@@ -10,22 +10,28 @@ Both are free without a card (re-check the current terms before you rely on them
 You create the two accounts yourself. Total time is about 15 minutes.
 
 ## 1. Database on Neon
-1. Sign up at https://neon.tech (signing in with GitHub works) and **create a project**, e.g. `qr-asset-manager`. Pick the region closest to Render's (Frankfurt / `aws-eu-central-1`).
-2. On the project dashboard, open **Connect**, choose the default branch and database, and **switch off "Connection pooling"**. Flyway needs the *direct* connection.
-3. Copy the connection details. Neon shows a URL like:
-   ```
-   postgresql://neondb_owner:AbC123xyz@ep-cool-name-123456.eu-central-1.aws.neon.tech/neondb?sslmode=require
-   ```
-   Split it into the three values the app expects:
-   | Variable | Value from the example |
-   |---|---|
-   | `DB_URL` | `jdbc:postgresql://ep-cool-name-123456.eu-central-1.aws.neon.tech/neondb?sslmode=require` |
-   | `DB_USER` | `neondb_owner` |
-   | `DB_PASSWORD` | `AbC123xyz` |
+The project is linked to this repository with the Neon CLI (`neon.ts`; the link itself is in the git-ignored `.neon` file). The app reads Neon's own variables directly ([`NeonDatabaseEnvironment`](../src/main/java/io/github/andi005/qram/common/NeonDatabaseEnvironment.java)):
 
-   The JDBC URL is the same address with `jdbc:` in front, the scheme shortened to `postgresql://`, and **no user or password inside it**.
+| Variable | What | Used for |
+|---|---|---|
+| `DATABASE_URL` | pooled connection (host contains `-pooler`) | the app's queries |
+| `DATABASE_URL_UNPOOLED` | direct connection | Flyway migrations (they need a direct session) |
+
+This split follows Neon's guidance: pooled connections for web application traffic, direct ones for schema migrations. Both are ordinary `postgresql://user:password@host/db?sslmode=require&channel_binding=require` URLs, which the app converts to JDBC form itself.
+
+**Get the values** (either way):
+- With the CLI (Node.js required): `npm i -g neon`, `neon login`, then `neon env pull` in the repository folder. This writes both to `.env.local`, which is git-ignored and must never be committed.
+- In the Neon dashboard: **Connect** → copy the string with *Connection pooling* on (→ `DATABASE_URL`) and with it off (→ `DATABASE_URL_UNPOOLED`).
 
 You don't create any tables: the app's Flyway migrations create them on the first start.
+
+**Branches.** `production` is the branch the deployed app uses. For experiments, `neon checkout dev --create` makes a copy that expires after 7 days (policy in `neon.ts`). Run the app against the branch in `.env.local` with the `neon` profile:
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=demo,neon"
+```
+`neon checkout production` switches `.env.local` back.
+
+The older `DB_URL` / `DB_USER` / `DB_PASSWORD` variables still work and take precedence when set, for example for Docker Compose or another host.
 
 ## 2. App on Render
 1. Sign up at https://render.com with your GitHub account and allow it to access the `qr-asset-manager-thesis` repository.
@@ -34,7 +40,8 @@ You don't create any tables: the app's Flyway migrations create them on the firs
 3. Fill in the environment variables it asks for:
    | Variable | Value |
    |---|---|
-   | `DB_URL`, `DB_USER`, `DB_PASSWORD` | from Neon (step 1) |
+   | `DATABASE_URL` | the `DATABASE_URL` line from `.env.local` (without the quotes) |
+   | `DATABASE_URL_UNPOOLED` | the `DATABASE_URL_UNPOOLED` line from `.env.local` (without the quotes) |
    | `APP_BASE_URL` | the service address, e.g. `https://qr-asset-manager.onrender.com`. Render shows it after the service is created. You can set it afterwards; the app restarts when it changes |
    | `ADMIN_INITIAL_PASSWORD` | a long password of your choice for the first `admin` login |
    | `DEMO_PASSWORD` | password for the demo accounts `it` and `viewer` |
