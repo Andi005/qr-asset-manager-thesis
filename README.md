@@ -7,6 +7,8 @@ Bachelor thesis: Andi Suka, Information Systems, UBT College (2026-2027).
 
 The user interface is in Albanian. The code, comments and documentation are in English.
 
+**Live:** https://qr-asset-manager-as5w.onrender.com (fictional demo data; the free instance sleeps when idle, so the first visit can take about a minute)
+
 ## Features
 Each feature traces to a requirement in [docs/requirements/requirements.md](docs/requirements/requirements.md).
 
