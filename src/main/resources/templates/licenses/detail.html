@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="sq">
+<head th:replace="~{fragments/layout :: head(${summary.license.name})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container" th:with="l=${summary.license}">
+  <div th:replace="~{fragments/layout :: flash}"></div>
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+      <h1 class="h3 mb-1" th:text="${l.name}">License</h1>
+      <div class="text-body-secondary" th:text="${l.vendor} ?: ''">vendor</div>
+    </div>
+    <a class="btn btn-outline-primary" sec:authorize="hasAnyRole('ADMIN','IT_STAFF')"
+       th:href="@{/licenses/{id}/edit(id=${l.id})}" th:text="#{common.edit}">Edit</a>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-4 col-md-3">
+      <div class="card stat-card"><div class="card-body">
+        <div class="stat-value" th:text="${summary.seatsUsed}">0</div>
+        <div class="stat-label" th:text="#{license.seatsUsed}">Used</div>
+      </div></div>
+    </div>
+    <div class="col-4 col-md-3">
+      <div class="card stat-card"><div class="card-body">
+        <div class="stat-value" th:text="${summary.seatsFree()}">0</div>
+        <div class="stat-label" th:text="#{license.seatsFree}">Free</div>
+      </div></div>
+    </div>
+    <div class="col-4 col-md-6">
+      <div class="card stat-card"><div class="card-body">
+        <div class="stat-value fs-5"
+             th:text="${l.expiryDate == null} ? #{license.perpetual} : ${@fmt.date(l.expiryDate)}">date</div>
+        <div class="stat-label">
+          <span class="badge" th:classappend="${summary.expiry.name() == 'EXPIRED'} ? 'text-bg-danger' : (${summary.expiry.name() == 'SOON'} ? 'text-bg-warning' : 'text-bg-light')"
+                th:text="#{license.expiry.__${summary.expiry}__}">state</span>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <p th:if="${l.notes != null}" th:text="${l.notes}">notes</p>
+
+  <div class="card mb-4" sec:authorize="hasAnyRole('ADMIN','IT_STAFF')">
+    <div class="card-body">
+      <h2 class="h6" th:text="#{license.allocate}">Allocate</h2>
+      <p th:if="${summary.seatsFree() == 0}" class="text-warning-emphasis mb-0" th:text="#{license.full}">Full</p>
+      <div class="row g-3" th:if="${summary.seatsFree() > 0}">
+        <form class="col-md-6" th:action="@{/licenses/{id}/allocations(id=${l.id})}" method="post">
+          <label class="form-label small" for="employeeId" th:text="#{license.allocateEmployee}">Employee</label>
+          <div class="input-group">
+            <select class="form-select" id="employeeId" name="employeeId" required>
+              <option value="" th:text="#{assignment.chooseEmployee}">choose</option>
+              <option th:each="e : ${employees}" th:value="${e.id}" th:text="${e.fullName}">name</option>
+            </select>
+            <button class="btn btn-primary" type="submit" th:text="#{common.add}">Add</button>
+          </div>
+        </form>
+        <form class="col-md-6" th:action="@{/licenses/{id}/allocations(id=${l.id})}" method="post">
+          <label class="form-label small" for="assetTag" th:text="#{license.allocateAsset}">Asset</label>
+          <div class="input-group">
+            <input class="form-control font-monospace" id="assetTag" name="assetTag" required maxlength="200"
+                   th:placeholder="#{license.assetTagPlaceholder}" autocapitalize="characters">
+            <button class="btn btn-primary" type="submit" th:text="#{common.add}">Add</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="h5" th:text="#{license.allocations}">Allocations</h2>
+  <p th:if="${allocations.isEmpty()}" class="text-body-secondary" th:text="#{common.empty}">Empty</p>
+  <div class="table-responsive mb-4" th:unless="${allocations.isEmpty()}">
+    <table class="table table-sm align-middle">
+      <thead><tr>
+        <th th:text="#{license.holder}">Holder</th>
+        <th th:text="#{license.allocated.col}">Allocated</th>
+        <th th:text="#{license.released.col}">Released</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+      <tr th:each="a : ${allocations}" th:classappend="${!a.open} ? 'text-body-secondary'">
+        <td>
+          <a th:if="${a.employee != null}" th:href="@{/employees/{id}(id=${a.employee.id})}" th:text="${a.holderName}">name</a>
+          <a th:if="${a.asset != null}" th:href="@{/assets/{id}(id=${a.asset.id})}" th:text="${a.holderName}">asset</a>
+        </td>
+        <td class="text-nowrap" th:text="${@fmt.dateTime(a.allocatedAt)}">date</td>
+        <td class="text-nowrap" th:text="${a.open} ? #{common.none} : ${@fmt.dateTime(a.releasedAt)}">date</td>
+        <td class="text-end">
+          <form th:if="${a.open}" sec:authorize="hasAnyRole('ADMIN','IT_STAFF')"
+                th:action="@{/licenses/{id}/allocations/{aid}/release(id=${l.id}, aid=${a.id})}" method="post">
+            <button class="btn btn-sm btn-outline-warning" type="submit" th:text="#{license.release}">Release</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="h5" th:text="#{asset.changes}">Changes</h2>
+  <div th:replace="~{fragments/layout :: changes(${changes})}"></div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

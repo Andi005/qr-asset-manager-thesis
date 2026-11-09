@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="sq">
+<head th:replace="~{fragments/layout :: head(${report.session.name})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container scan-page-wide" th:with="s=${report.session}">
+  <div th:replace="~{fragments/layout :: flash}"></div>
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+      <h1 class="h3 mb-1" th:text="${s.name}">Session</h1>
+      <div class="text-body-secondary small">
+        <span th:text="${s.location?.name} ?: ''">loc</span>
+        <span th:text="' · ' + #{inventory.started} + ' ' + ${@fmt.dateTime(s.startedAt)}">started</span>
+        <span th:if="${s.finished}" th:text="' · ' + #{inventory.finishedAt} + ' ' + ${@fmt.dateTime(s.finishedAt)}">finished</span>
+      </div>
+    </div>
+    <div class="text-end">
+      <div class="small text-body-secondary" th:text="#{inventory.duration}">Duration</div>
+      <div class="fs-3 font-monospace" id="duration" th:text="${@fmt.duration(report.duration)}"
+           th:data-started="${s.startedAt.toEpochMilli()}" th:data-finished="${s.finished}">0:00</div>
+    </div>
+  </div>
+
+  <!-- Data and texts for inventory.js. -->
+  <div id="inventory-config" hidden th:data-session="${s.id}" th:data-finished="${s.finished}"
+       th:data-camera-error="#{scan.cameraError}" th:data-no-code="#{scan.noCodeInPhoto}"></div>
+
+  <div class="row g-2 mb-3 text-center">
+    <div class="col-4 col-md-2"><div class="card stat-card"><div class="card-body p-2">
+      <div class="stat-value" id="count-expected" th:text="${report.expected.size()}">0</div>
+      <div class="stat-label" th:text="#{inventory.counts.expected}">Expected</div></div></div></div>
+    <div class="col-4 col-md-2"><div class="card stat-card border-success"><div class="card-body p-2">
+      <div class="stat-value text-success" id="count-found" th:text="${report.found.size()}">0</div>
+      <div class="stat-label" th:text="#{inventory.counts.found}">Found</div></div></div></div>
+    <div class="col-4 col-md-2"><div class="card stat-card border-danger"><div class="card-body p-2">
+      <div class="stat-value text-danger" id="count-missing" th:text="${report.missing.size()}">0</div>
+      <div class="stat-label" th:text="#{inventory.counts.missing}">Missing</div></div></div></div>
+    <div class="col-4 col-md-2"><div class="card stat-card border-warning"><div class="card-body p-2">
+      <div class="stat-value text-warning-emphasis" id="count-unexpected" th:text="${report.unexpected.size()}">0</div>
+      <div class="stat-label" th:text="#{inventory.counts.unexpected}">Unexpected</div></div></div></div>
+    <div class="col-4 col-md-2"><div class="card stat-card"><div class="card-body p-2">
+      <div class="stat-value" id="count-unknown" th:text="${report.unknownScans}">0</div>
+      <div class="stat-label" th:text="#{inventory.counts.unknown}">Unknown</div></div></div></div>
+    <div class="col-4 col-md-2"><div class="card stat-card"><div class="card-body p-2">
+      <div class="stat-value" id="count-duplicates" th:text="${report.duplicateScans}">0</div>
+      <div class="stat-label" th:text="#{inventory.counts.duplicates}">Duplicates</div></div></div></div>
+  </div>
+
+  <div th:if="${s.finished}" class="alert alert-secondary" th:text="#{inventory.readOnly}">Finished</div>
+
+  <div class="row g-4">
+    <div class="col-lg-5" th:unless="${s.finished}" sec:authorize="hasAnyRole('ADMIN','IT_STAFF')">
+      <div id="reader" class="scan-reader mb-2"></div>
+      <div class="d-grid gap-2 mb-3">
+        <button class="btn btn-primary btn-lg" type="button" id="startCamera" th:text="#{scan.start}">Start</button>
+        <button class="btn btn-outline-secondary btn-lg" type="button" id="stopCamera" hidden th:text="#{scan.stop}">Stop</button>
+        <label class="btn btn-outline-primary mb-0" for="photoInput" th:text="#{scan.photo}">Photo</label>
+        <input class="d-none" type="file" id="photoInput" accept="image/*" capture="environment">
+      </div>
+      <div id="lastResult" class="alert d-none fs-5 text-center" role="status" aria-live="assertive"></div>
+      <form id="manualForm" class="mb-3">
+        <label class="form-label small" for="manualInput" th:text="#{inventory.manual}">Manual</label>
+        <div class="input-group">
+          <input class="form-control font-monospace" id="manualInput" maxlength="200" autocapitalize="characters"
+                 th:placeholder="#{scan.manualPlaceholder}">
+          <button class="btn btn-outline-primary" type="submit" th:text="#{inventory.manualSubmit}">Add</button>
+        </div>
+      </form>
+      <form th:action="@{/inventory/{id}/finish(id=${s.id})}" method="post" th:data-confirm="#{inventory.finishConfirm}">
+        <button class="btn btn-danger w-100" type="submit" th:text="#{inventory.finish}">Finish</button>
+      </form>
+    </div>
+
+    <div class="col">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <h2 class="h6 text-danger" th:text="#{inventory.counts.missing}">Missing</h2>
+          <ul class="list-group list-group-flush small asset-list" id="list-missing">
+            <li class="list-group-item px-0" th:each="a : ${report.missing}">
+              <span class="font-monospace" th:text="${a.tag}">tag</span> <span th:text="${a.displayName}">name</span>
+            </li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <h2 class="h6 text-success" th:text="#{inventory.counts.found}">Found</h2>
+          <ul class="list-group list-group-flush small asset-list" id="list-found">
+            <li class="list-group-item px-0" th:each="a : ${report.found}">
+              <span class="font-monospace" th:text="${a.tag}">tag</span> <span th:text="${a.displayName}">name</span>
+            </li>
+          </ul>
+          <h2 class="h6 text-warning-emphasis mt-3" th:text="#{inventory.counts.unexpected}">Unexpected</h2>
+          <ul class="list-group list-group-flush small asset-list" id="list-unexpected">
+            <li class="list-group-item px-0" th:each="a : ${report.unexpected}">
+              <span class="font-monospace" th:text="${a.tag}">tag</span> <span th:text="${a.displayName}">name</span>
+              <span class="text-body-secondary" th:text="${a.locationName} ?: ''">loc</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <h2 class="h6 mt-4" th:text="#{inventory.lastScans}">Last scans</h2>
+      <div class="table-responsive">
+        <table class="table table-sm small">
+          <tbody id="scan-log">
+          <tr th:each="scan : ${#lists.toList(report.scans).reversed()}">
+            <td class="font-monospace" th:text="${@fmt.time(scan.scannedAt)}">time</td>
+            <td class="font-monospace text-break" th:text="${scan.asset?.tag} ?: ${scan.rawValue}">value</td>
+            <td th:text="#{inventory.result.__${scan.result}__}">result</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <a class="btn btn-outline-secondary btn-sm" th:href="@{/inventory/{id}/summary.csv(id=${s.id})}"
+           th:text="#{inventory.exportSummary}">Summary</a>
+        <a class="btn btn-outline-secondary btn-sm" th:href="@{/inventory/{id}/scans.csv(id=${s.id})}"
+           th:text="#{inventory.exportScans}">Scans</a>
+        <span class="small text-body-secondary align-self-center"
+              th:text="#{inventory.counts.manual} + ': ' + ${report.manualEntries} + ' · ' + #{inventory.counts.typed} + ': ' + ${report.typedCharacters}">manual</span>
+      </div>
+    </div>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:unless="${report.session.finished}">
+  <script th:src="@{/webjars/html5-qrcode/html5-qrcode.min.js}"></script>
+  <script th:src="@{/js/qr-scanner.js}"></script>
+</th:block>
+<script th:src="@{/js/inventory.js}"></script>
+</body>
+</html>

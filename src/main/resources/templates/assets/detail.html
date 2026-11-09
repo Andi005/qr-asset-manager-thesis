@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="sq">
+<head th:replace="~{fragments/layout :: head(${asset.tag})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container">
+  <div th:replace="~{fragments/layout :: flash}"></div>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+      <h1 class="h3 mb-1"><span class="font-monospace" th:text="${asset.tag}">IT-000001</span></h1>
+      <div class="fs-5" th:text="${asset.displayName}">Device</div>
+      <span th:replace="~{fragments/layout :: statusBadge(${asset.status})}"></span>
+    </div>
+    <div class="d-flex flex-wrap gap-2" sec:authorize="hasAnyRole('ADMIN','IT_STAFF')">
+      <a class="btn btn-outline-primary" th:href="@{/assets/{id}/edit(id=${asset.id})}" th:text="#{common.edit}">Edit</a>
+      <a class="btn btn-outline-dark" th:href="@{/labels(ids=${asset.id})}" th:text="#{asset.label.print}">Label</a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <!-- Current holder: the big question on a phone after scanning. -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h2 class="h6 text-body-secondary mb-2" th:text="#{asset.currentHolder}">Holder</h2>
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="fs-4" id="current-holder">
+              <a th:if="${current != null}" th:href="@{/employees/{id}(id=${current.employee.id})}"
+                 th:text="${current.employee.fullName}">Name</a>
+              <span th:if="${current != null}" class="small text-body-secondary d-block"
+                    th:text="#{assignment.from} + ' ' + ${@fmt.dateTime(current.assignedAt)}">since</span>
+              <span th:if="${current == null}" class="text-body-secondary" th:text="#{asset.noHolder}">Nobody</span>
+            </div>
+            <div sec:authorize="hasAnyRole('ADMIN','IT_STAFF')">
+              <form th:if="${current != null}" th:action="@{/assets/{id}/return(id=${asset.id})}" method="post"
+                    th:data-confirm="#{asset.returnConfirm}">
+                <button class="btn btn-warning btn-lg" type="submit" th:text="#{asset.return}">Return</button>
+              </form>
+              <a th:if="${current == null and asset.status.canBeAssigned()}" class="btn btn-primary btn-lg"
+                 th:href="@{/assets/{id}/assign(id=${asset.id})}" th:text="#{asset.assign}">Assign</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <dl class="row mb-4">
+        <dt class="col-sm-4" th:text="#{asset.field.category}">Category</dt>
+        <dd class="col-sm-8" th:text="#{asset.category.__${asset.category}__}">c</dd>
+        <dt class="col-sm-4" th:text="#{asset.field.serialNumber}">Serial</dt>
+        <dd class="col-sm-8 font-monospace" th:text="${asset.serialNumber} ?: #{common.none}">s</dd>
+        <dt class="col-sm-4" th:text="#{asset.field.location}">Location</dt>
+        <dd class="col-sm-8" th:text="${asset.locationName} ?: #{common.none}">l</dd>
+        <dt class="col-sm-4" th:text="#{asset.field.purchaseDate}">Purchase</dt>
+        <dd class="col-sm-8" th:text="${@fmt.date(asset.purchaseDate)}">d</dd>
+        <dt class="col-sm-4" th:text="#{asset.field.warrantyEndDate}">Warranty</dt>
+        <dd class="col-sm-8" th:text="${@fmt.date(asset.warrantyEndDate)}">d</dd>
+        <dt class="col-sm-4" th:if="${asset.notes != null}" th:text="#{asset.field.notes}">Notes</dt>
+        <dd class="col-sm-8" th:if="${asset.notes != null}" th:text="${asset.notes}">n</dd>
+      </dl>
+
+      <h2 class="h5" th:text="#{asset.history}">History</h2>
+      <p th:if="${assignments.isEmpty()}" class="text-body-secondary" th:text="#{common.empty}">Empty</p>
+      <div class="table-responsive mb-4" th:unless="${assignments.isEmpty()}">
+        <table class="table table-sm align-middle" id="assignment-history">
+          <thead><tr>
+            <th th:text="#{assignment.employee}">Employee</th>
+            <th th:text="#{assignment.from}">From</th>
+            <th th:text="#{assignment.to}">To</th>
+            <th class="d-none d-md-table-cell" th:text="#{assignment.by}">By</th>
+          </tr></thead>
+          <tbody>
+          <tr th:each="h : ${assignments}" th:classappend="${h.open} ? 'table-primary'">
+            <td><a th:href="@{/employees/{id}(id=${h.employee.id})}" th:text="${h.employee.fullName}">name</a></td>
+            <td class="text-nowrap" th:text="${@fmt.dateTime(h.assignedAt)}">from</td>
+            <td class="text-nowrap" th:text="${h.open} ? #{assignment.current} : ${@fmt.dateTime(h.returnedAt)}">to</td>
+            <td class="d-none d-md-table-cell small" th:text="${h.assignedBy}">by</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="h5" th:text="#{asset.licenses}">Licenses</h2>
+      <p th:if="${licenses.isEmpty()}" class="text-body-secondary" th:text="#{common.empty}">Empty</p>
+      <ul class="list-group mb-4" th:unless="${licenses.isEmpty()}">
+        <li class="list-group-item" th:each="l : ${licenses}">
+          <a th:href="@{/licenses/{id}(id=${l.license.id})}" th:text="${l.license.name}">license</a>
+        </li>
+      </ul>
+
+      <h2 class="h5" th:text="#{asset.changes}">Changes</h2>
+      <div th:replace="~{fragments/layout :: changes(${changes})}"></div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card text-center">
+        <div class="card-body">
+          <h2 class="h6" th:text="#{asset.label}">Label</h2>
+          <img class="img-fluid" style="max-width: 200px" th:src="@{/qr/{tag}.png(tag=${asset.tag})}"
+               th:alt="${asset.tag}">
+          <div class="font-monospace fw-bold mt-1" th:text="${asset.tag}">tag</div>
+          <p class="small text-body-secondary mt-2 mb-0" th:text="#{asset.label.hint}">hint</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

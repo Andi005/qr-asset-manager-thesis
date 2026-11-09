@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="sq">
+<head th:replace="~{fragments/layout :: head(#{license.list.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container">
+  <div th:replace="~{fragments/layout :: flash}"></div>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0" th:text="#{license.list.title}">Licenses</h1>
+    <a class="btn btn-primary" th:href="@{/licenses/new}" sec:authorize="hasAnyRole('ADMIN','IT_STAFF')"
+       th:text="#{license.new}">New</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr>
+        <th th:text="#{license.name}">Name</th>
+        <th class="d-none d-md-table-cell" th:text="#{license.vendor}">Vendor</th>
+        <th class="text-end" th:text="#{license.seats}">Seats</th>
+        <th th:text="#{license.expiryDate}">Expiry</th>
+        <th th:text="#{common.status}">Status</th>
+      </tr></thead>
+      <tbody>
+      <tr th:if="${licenses.isEmpty()}"><td colspan="5" class="text-body-secondary" th:text="#{common.empty}">Empty</td></tr>
+      <tr th:each="s : ${licenses}">
+        <td><a th:href="@{/licenses/{id}(id=${s.license.id})}" th:text="${s.license.name}">name</a></td>
+        <td class="d-none d-md-table-cell" th:text="${s.license.vendor} ?: #{common.none}">vendor</td>
+        <td class="text-end text-nowrap" th:text="${s.seatsUsed} + ' / ' + ${s.license.seatsTotal}">0 / 0</td>
+        <td th:text="${s.license.expiryDate == null} ? #{license.perpetual} : ${@fmt.date(s.license.expiryDate)}">date</td>
+        <td>
+          <span class="badge" th:classappend="${s.expiry.name() == 'EXPIRED'} ? 'text-bg-danger' : (${s.expiry.name() == 'SOON'} ? 'text-bg-warning' : 'text-bg-light')"
+                th:text="#{license.expiry.__${s.expiry}__}">state</span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

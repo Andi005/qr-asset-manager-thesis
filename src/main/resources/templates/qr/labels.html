@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="sq">
+<head th:replace="~{fragments/layout :: head(#{labels.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container">
+  <div class="d-print-none">
+    <h1 class="h3" th:text="#{labels.title}">Labels</h1>
+    <p class="text-body-secondary" th:text="#{labels.choose}">Choose</p>
+    <form class="row g-2 mb-3" th:action="@{/labels}" method="get">
+      <div class="col-sm-8">
+        <select class="form-select" name="location" required th:attr="aria-label=#{labels.byLocation}">
+          <option value="" th:text="#{labels.byLocation}">Location</option>
+          <option th:each="l : ${locations}" th:value="${l.id}" th:selected="${l.id == selectedLocation}"
+                  th:text="${l.name}">l</option>
+        </select>
+      </div>
+      <div class="col-sm-4 d-grid">
+        <button class="btn btn-outline-secondary" type="submit" th:text="#{labels.show}">Show</button>
+      </div>
+    </form>
+    <div th:unless="${assets.isEmpty()}" class="d-flex justify-content-between align-items-center mb-3">
+      <span th:text="#{labels.count(${assets.size()})}">0</span>
+      <button class="btn btn-primary" type="button" onclick="window.print()" th:text="#{common.print}">Print</button>
+    </div>
+    <p class="small text-body-secondary" th:unless="${assets.isEmpty()}" th:text="#{labels.printHint(${baseUrl})}">hint</p>
+  </div>
+
+  <!-- The sheet itself: what gets printed. -->
+  <div class="label-sheet">
+    <div class="qr-label" th:each="a : ${assets}">
+      <img th:src="@{/qr/{tag}.png(tag=${a.tag})}" th:alt="${a.tag}">
+      <div class="qr-label-text">
+        <div class="qr-label-tag" th:text="${a.tag}">IT-000001</div>
+        <div class="qr-label-model" th:text="${a.displayName}">Model</div>
+      </div>
+    </div>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

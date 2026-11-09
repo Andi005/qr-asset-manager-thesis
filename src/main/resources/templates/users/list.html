@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="sq">
+<head th:replace="~{fragments/layout :: head(#{user.list.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container">
+  <div th:replace="~{fragments/layout :: flash}"></div>
+  <h1 class="h3 mb-3" th:text="#{user.list.title}">Users</h1>
+
+  <div class="table-responsive mb-4">
+    <table class="table align-middle">
+      <thead><tr>
+        <th th:text="#{user.username}">Username</th>
+        <th th:text="#{user.displayName}">Name</th>
+        <th th:text="#{user.role}">Role</th>
+        <th th:text="#{common.status}">Status</th>
+        <th th:text="#{user.resetPassword}">Password</th>
+      </tr></thead>
+      <tbody>
+      <tr th:each="u : ${users}" th:classappend="${!u.active} ? 'text-body-secondary'">
+        <td class="font-monospace" th:text="${u.username}">user</td>
+        <td th:text="${u.displayName}">name</td>
+        <td>
+          <form class="d-flex gap-1" th:action="@{/users/{id}/role(id=${u.id})}" method="post">
+            <select class="form-select form-select-sm" name="role" th:attr="aria-label=#{user.role}">
+              <option th:each="r : ${roles}" th:value="${r}" th:selected="${r == u.role}"
+                      th:text="#{user.role.__${r}__}">role</option>
+            </select>
+            <button class="btn btn-sm btn-outline-primary" type="submit" th:text="#{common.save}">Save</button>
+          </form>
+        </td>
+        <td>
+          <form th:action="@{/users/{id}/active(id=${u.id})}" method="post">
+            <input type="hidden" name="active" th:value="${!u.active}">
+            <button class="btn btn-sm" type="submit"
+                    th:classappend="${u.active} ? 'btn-outline-danger' : 'btn-outline-success'"
+                    th:text="${u.active} ? #{employee.deactivate} : #{employee.activate}">toggle</button>
+          </form>
+        </td>
+        <td>
+          <form class="d-flex gap-1" th:action="@{/users/{id}/password(id=${u.id})}" method="post">
+            <input class="form-control form-control-sm" type="password" name="password" minlength="8" maxlength="72"
+                   required autocomplete="new-password" th:placeholder="#{user.newPassword}">
+            <button class="btn btn-sm btn-outline-secondary" type="submit" th:text="#{common.save}">Save</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="max-width: 640px">
+    <div class="card-body">
+      <h2 class="h5" th:text="#{user.new}">New user</h2>
+      <form th:action="@{/users}" th:object="${form}" method="post" novalidate>
+        <div th:replace="~{fragments/layout :: globalErrors}"></div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="username" th:text="#{user.username}">Username</label>
+            <input class="form-control" th:field="*{username}" th:errorclass="is-invalid" maxlength="60"
+                   autocapitalize="none" required>
+            <div class="invalid-feedback" th:errors="*{username}">error</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="displayName" th:text="#{user.displayName}">Name</label>
+            <input class="form-control" th:field="*{displayName}" th:errorclass="is-invalid" maxlength="120" required>
+            <div class="invalid-feedback" th:errors="*{displayName}">error</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="role" th:text="#{user.role}">Role</label>
+            <select class="form-select" th:field="*{role}">
+              <option th:each="r : ${roles}" th:value="${r}" th:text="#{user.role.__${r}__}">role</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="password" th:text="#{user.password}">Password</label>
+            <input class="form-control" type="password" th:field="*{password}" th:errorclass="is-invalid"
+                   minlength="8" maxlength="72" autocomplete="new-password" required>
+            <div class="invalid-feedback" th:errors="*{password}">error</div>
+          </div>
+        </div>
+        <button class="btn btn-primary mt-3" type="submit" th:text="#{common.create}">Create</button>
+      </form>
+    </div>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

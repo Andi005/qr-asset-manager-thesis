@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="sq">
+<head th:replace="~{fragments/layout :: head(#{employee.list.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container">
+  <div th:replace="~{fragments/layout :: flash}"></div>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0" th:text="#{employee.list.title}">Employees</h1>
+    <a class="btn btn-primary" th:href="@{/employees/new}" sec:authorize="hasAnyRole('ADMIN','IT_STAFF')"
+       th:text="#{employee.new}">New</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr>
+        <th th:text="#{employee.fullName}">Name</th>
+        <th class="d-none d-md-table-cell" th:text="#{employee.department}">Department</th>
+        <th class="d-none d-md-table-cell" th:text="#{employee.email}">E-mail</th>
+        <th class="text-end" th:text="#{employee.holding}">Holding</th>
+        <th th:text="#{common.status}">Status</th>
+      </tr></thead>
+      <tbody>
+      <tr th:if="${employees.isEmpty()}"><td colspan="5" class="text-body-secondary" th:text="#{common.empty}">Empty</td></tr>
+      <tr th:each="e : ${employees}" th:classappend="${!e.active} ? 'text-body-secondary'">
+        <td><a th:href="@{/employees/{id}(id=${e.id})}" th:text="${e.fullName}">name</a></td>
+        <td class="d-none d-md-table-cell" th:text="${e.department} ?: #{common.none}">dep</td>
+        <td class="d-none d-md-table-cell" th:text="${e.email} ?: #{common.none}">mail</td>
+        <td class="text-end" th:text="${holdingCounts.getOrDefault(e.id, 0L)}">0</td>
+        <td>
+          <span th:if="${e.active}" class="badge text-bg-success" th:text="#{common.active}">active</span>
+          <span th:unless="${e.active}" class="badge text-bg-secondary" th:text="#{common.inactive}">inactive</span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

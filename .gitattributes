@@ -1,0 +1,16 @@
+# Normal text files: Git picks the right line endings for each machine.
+* text=auto
+
+# Windows command scripts need CRLF.
+*.cmd text eol=crlf
+
+# Shell scripts need LF, also on Windows (Git Bash) and inside Docker.
+*.sh text eol=lf
+mvnw text eol=lf
+
+*.jar binary
+*.png binary
+*.docx binary
+
+# CSV samples keep their exact bytes (BOM, CRLF), like a real Excel export.
+*.csv -text

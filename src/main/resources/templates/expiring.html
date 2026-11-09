@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="sq">
+<head th:replace="~{fragments/layout :: head(#{expiring.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container">
+  <h1 class="h3" th:text="#{expiring.title}">Expiring</h1>
+  <p class="text-body-secondary"
+     th:text="#{expiring.window(${@fmt.date(expiring.today)}, ${@fmt.date(expiring.lastDay)})}">window</p>
+
+  <section class="mb-4" id="licenses-soon">
+    <h2 class="h5" th:text="#{expiring.licensesSoon}">Licenses</h2>
+    <p th:if="${expiring.licensesSoon.isEmpty()}" class="text-body-secondary" th:text="#{expiring.noneSoon}">None</p>
+    <div class="table-responsive" th:unless="${expiring.licensesSoon.isEmpty()}">
+      <table class="table table-hover align-middle">
+        <thead><tr>
+          <th th:text="#{license.name}">Name</th>
+          <th th:text="#{license.vendor}">Vendor</th>
+          <th th:text="#{expiring.date}">Date</th>
+          <th class="text-end" th:text="#{expiring.daysLeft}">Days</th>
+        </tr></thead>
+        <tbody>
+        <tr th:each="l : ${expiring.licensesSoon}">
+          <td><a th:href="@{/licenses/{id}(id=${l.id})}" th:text="${l.name}">name</a></td>
+          <td th:text="${l.vendor} ?: #{common.none}">vendor</td>
+          <td th:text="${@fmt.date(l.expiryDate)}">date</td>
+          <td class="text-end">
+            <span class="badge text-bg-warning"
+                  th:text="${expiring.daysLeft(l.expiryDate) == 0} ? #{expiring.today} : ${expiring.daysLeft(l.expiryDate)}">0</span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="mb-4" id="warranties-soon">
+    <h2 class="h5" th:text="#{expiring.warrantiesSoon}">Warranties</h2>
+    <p th:if="${expiring.warrantiesSoon.isEmpty()}" class="text-body-secondary" th:text="#{expiring.noneSoon}">None</p>
+    <div class="table-responsive" th:unless="${expiring.warrantiesSoon.isEmpty()}">
+      <table class="table table-hover align-middle">
+        <thead><tr>
+          <th th:text="#{asset.field.tag}">Tag</th>
+          <th th:text="#{asset.field.name}">Device</th>
+          <th th:text="#{asset.field.location}">Location</th>
+          <th th:text="#{expiring.date}">Date</th>
+          <th class="text-end" th:text="#{expiring.daysLeft}">Days</th>
+        </tr></thead>
+        <tbody>
+        <tr th:each="a : ${expiring.warrantiesSoon}">
+          <td><a class="font-monospace" th:href="@{/assets/{id}(id=${a.id})}" th:text="${a.tag}">tag</a></td>
+          <td th:text="${a.displayName}">name</td>
+          <td th:text="${a.locationName} ?: #{common.none}">location</td>
+          <td th:text="${@fmt.date(a.warrantyEndDate)}">date</td>
+          <td class="text-end">
+            <span class="badge text-bg-warning"
+                  th:text="${expiring.daysLeft(a.warrantyEndDate) == 0} ? #{expiring.today} : ${expiring.daysLeft(a.warrantyEndDate)}">0</span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="row g-4">
+    <section class="col-lg-6" id="licenses-expired">
+      <h2 class="h6 text-danger-emphasis" th:text="#{expiring.licensesExpired}">Expired licenses</h2>
+      <p th:if="${expiring.licensesExpired.isEmpty()}" class="text-body-secondary small" th:text="#{expiring.noneExpired}">None</p>
+      <ul class="list-group" th:unless="${expiring.licensesExpired.isEmpty()}">
+        <li class="list-group-item d-flex justify-content-between" th:each="l : ${expiring.licensesExpired}">
+          <a th:href="@{/licenses/{id}(id=${l.id})}" th:text="${l.name}">name</a>
+          <span class="small text-body-secondary"
+                th:text="${@fmt.date(l.expiryDate)} + ' · ' + #{expiring.ago(${-expiring.daysLeft(l.expiryDate)})}">date</span>
+        </li>
+      </ul>
+    </section>
+    <section class="col-lg-6" id="warranties-expired">
+      <h2 class="h6 text-danger-emphasis" th:text="#{expiring.warrantiesExpired}">Expired warranties</h2>
+      <p th:if="${expiring.warrantiesExpired.isEmpty()}" class="text-body-secondary small" th:text="#{expiring.noneExpired}">None</p>
+      <ul class="list-group" th:unless="${expiring.warrantiesExpired.isEmpty()}">
+        <li class="list-group-item d-flex justify-content-between" th:each="a : ${expiring.warrantiesExpired}">
+          <a th:href="@{/assets/{id}(id=${a.id})}" th:text="${a.tag + ' ' + a.displayName}">asset</a>
+          <span class="small text-body-secondary" th:text="${@fmt.date(a.warrantyEndDate)}">date</span>
+        </li>
+      </ul>
+    </section>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

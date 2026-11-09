@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="sq">
+<head th:replace="~{fragments/layout :: head(#{inventory.new.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container" style="max-width: 640px">
+  <h1 class="h3 mb-3" th:text="#{inventory.new.title}">New inventory</h1>
+  <div th:if="${error != null}" class="alert alert-danger"
+       th:text="${#messages.msgWithParams(error.messageKey(), error.args())}">error</div>
+  <form th:action="@{/inventory}" method="post">
+    <div class="mb-3">
+      <label class="form-label" for="name" th:text="#{inventory.name}">Name</label>
+      <input class="form-control form-control-lg" id="name" name="name" maxlength="120" required
+             th:value="${name}" th:placeholder="#{inventory.namePlaceholder}">
+    </div>
+    <fieldset class="mb-3">
+      <legend class="form-label fs-6 fw-semibold" th:text="#{inventory.expected}">Expected</legend>
+      <label class="form-label small" for="locationId" th:text="#{inventory.byLocation}">By location</label>
+      <select class="form-select mb-3" id="locationId" name="locationId">
+        <option value="" th:text="#{asset.noLocation}">none</option>
+        <option th:each="l : ${locations}" th:value="${l.id}" th:selected="${l.id == locationId}"
+                th:text="${l.name}">l</option>
+      </select>
+      <label class="form-label small" for="tagList" th:text="#{inventory.byList}">By list</label>
+      <textarea class="form-control font-monospace" id="tagList" name="tagList" rows="5"
+                th:text="${tagList}" placeholder="IT-000001&#10;IT-000002"></textarea>
+      <div class="form-text" th:text="#{inventory.byListHint}">hint</div>
+    </fieldset>
+    <button class="btn btn-primary btn-lg w-100" type="submit" th:text="#{inventory.start}">Start</button>
+  </form>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

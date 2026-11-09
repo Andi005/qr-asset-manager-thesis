@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="sq">
+<head th:replace="~{fragments/layout :: head(#{inventory.list.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container">
+  <div th:replace="~{fragments/layout :: flash}"></div>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0" th:text="#{inventory.list.title}">Inventories</h1>
+    <a class="btn btn-primary" th:href="@{/inventory/new}" sec:authorize="hasAnyRole('ADMIN','IT_STAFF')"
+       th:text="#{inventory.new}">New</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr>
+        <th th:text="#{inventory.name}">Name</th>
+        <th class="d-none d-md-table-cell" th:text="#{asset.field.location}">Location</th>
+        <th th:text="#{inventory.started}">Started</th>
+        <th class="text-end" th:text="#{inventory.counts.expected}">Expected</th>
+        <th th:text="#{common.status}">Status</th>
+      </tr></thead>
+      <tbody>
+      <tr th:if="${sessions.isEmpty()}"><td colspan="5" class="text-body-secondary" th:text="#{common.empty}">Empty</td></tr>
+      <tr th:each="s : ${sessions}">
+        <td><a th:href="@{/inventory/{id}(id=${s.id})}" th:text="${s.name}">name</a></td>
+        <td class="d-none d-md-table-cell" th:text="${s.location?.name} ?: #{common.none}">loc</td>
+        <td class="text-nowrap" th:text="${@fmt.dateTime(s.startedAt)}">date</td>
+        <td class="text-end" th:text="${s.expectedAssetIds.size()}">0</td>
+        <td>
+          <span th:if="${s.finished}" class="badge text-bg-secondary" th:text="#{inventory.done}">done</span>
+          <span th:unless="${s.finished}" class="badge text-bg-primary" th:text="#{inventory.running}">running</span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

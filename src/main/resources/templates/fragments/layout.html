@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="sq">
+<!-- Shared page parts. A page includes them with th:replace="~{fragments/layout :: head(title)}". -->
+<head th:fragment="head(title)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The JSON API needs the CSRF token in a header; scripts read it from here. -->
+  <meta name="_csrf" th:if="${_csrf != null}" th:content="${_csrf.token}">
+  <meta name="_csrf_header" th:if="${_csrf != null}" th:content="${_csrf.headerName}">
+  <title th:text="${title} + ' · ' + #{app.name}">QR Asset Manager</title>
+  <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 d-print-none">
+  <div class="container">
+    <a class="navbar-brand fw-semibold" th:href="@{/}" th:text="#{app.name}">QR Asset Manager</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+            aria-controls="mainNav" aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav" sec:authorize="isAuthenticated()">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" th:href="@{/}" th:text="#{nav.dashboard}">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/assets}" th:text="#{nav.assets}">Assets</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/employees}" th:text="#{nav.employees}">Employees</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/licenses}" th:text="#{nav.licenses}">Licenses</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/expiring}" th:text="#{nav.expiring}">Expiring</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/inventory}" th:text="#{nav.inventory}">Inventory</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/scan}" th:text="#{nav.scan}">Scan</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+             th:text="#{nav.more}">More</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" th:href="@{/locations}" th:text="#{nav.locations}">Locations</a></li>
+            <li sec:authorize="hasAnyRole('ADMIN','IT_STAFF')">
+              <a class="dropdown-item" th:href="@{/labels}" th:text="#{nav.labels}">Labels</a></li>
+            <li><a class="dropdown-item" th:href="@{/history}" th:text="#{nav.history}">History</a></li>
+            <li sec:authorize="hasRole('ADMIN')"><hr class="dropdown-divider"></li>
+            <li sec:authorize="hasRole('ADMIN')">
+              <a class="dropdown-item" th:href="@{/import}" th:text="#{nav.import}">Import</a></li>
+            <li sec:authorize="hasRole('ADMIN')">
+              <a class="dropdown-item" th:href="@{/users}" th:text="#{nav.users}">Users</a></li>
+          </ul>
+        </li>
+      </ul>
+      <form class="d-flex align-items-center gap-2" th:action="@{/logout}" method="post">
+        <span class="navbar-text small" th:text="#{nav.loggedInAs(${#authentication.name})}">user</span>
+        <button class="btn btn-outline-light btn-sm" type="submit" th:text="#{nav.logout}">Log out</button>
+      </form>
+    </div>
+  </div>
+</nav>
+
+<!-- The one-time message after a redirect (see common/Flash.java). -->
+<div th:fragment="flash" th:if="${flash != null}" class="alert alert-dismissible fade show d-print-none"
+     th:classappend="'alert-' + ${flash.type}" role="alert">
+  <span th:text="${#messages.msgWithParams(flash.key, flash.args)}">Message</span>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="OK"></button>
+</div>
+
+<!-- Global (not field) form errors, e.g. a concurrent edit. -->
+<div th:fragment="globalErrors" th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+  <div th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</div>
+</div>
+
+<span th:fragment="statusBadge(status)" class="badge"
+      th:classappend="${status.name() == 'IN_STOCK'} ? 'text-bg-success' : (${status.name() == 'IN_REPAIR'} ? 'text-bg-warning' : 'text-bg-secondary')"
+      th:text="#{asset.status.__${status.name()}__}">Status</span>
+
+<!-- A change-log table, used on asset, employee and license pages. -->
+<div th:fragment="changes(entries)">
+  <p th:if="${#lists.isEmpty(entries)}" class="text-body-secondary" th:text="#{common.empty}">Empty</p>
+  <div class="table-responsive" th:unless="${#lists.isEmpty(entries)}">
+    <table class="table table-sm align-middle">
+      <thead>
+      <tr>
+        <th th:text="#{common.when}">When</th>
+        <th th:text="#{common.who}">Who</th>
+        <th th:text="#{common.what}">What</th>
+        <th th:text="#{common.details.col}">Details</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="e : ${entries}">
+        <td class="text-nowrap" th:text="${@fmt.dateTime(e.at)}">date</td>
+        <td th:text="${e.username}">user</td>
+        <td th:text="#{action.__${e.action}__}">action</td>
+        <td class="small" th:text="${e.details}">details</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer th:fragment="footer" class="container text-body-secondary small py-4 d-print-none">
+  <span th:text="#{app.footer}">Footer</span>
+  <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+  <script th:src="@{/js/app.js}"></script>
+</footer>
+
+</body>
+</html>

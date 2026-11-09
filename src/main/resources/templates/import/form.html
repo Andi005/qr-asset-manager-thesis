@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="sq">
+<head th:replace="~{fragments/layout :: head(#{import.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container">
+  <h1 class="h3" th:text="#{import.title}">Import</h1>
+  <p th:text="#{import.lead}">Lead</p>
+  <p class="text-body-secondary small" th:text="#{import.rule}">Rule</p>
+
+  <form class="row g-2 mb-4" th:action="@{/import}" method="post" enctype="multipart/form-data">
+    <div class="col-md-8">
+      <input class="form-control" type="file" name="file" accept=".csv,text/csv" required
+             th:attr="aria-label=#{import.file}">
+    </div>
+    <div class="col-md-4 d-grid">
+      <button class="btn btn-primary" type="submit" th:text="#{import.submit}">Import</button>
+    </div>
+  </form>
+
+  <section th:if="${report != null}" id="import-report" class="mb-4">
+    <div th:if="${report.success()}" class="alert alert-success">
+      <div th:text="#{import.success(${report.imported}, ${report.fileName})}">ok</div>
+      <div th:if="${report.locationsCreated > 0}" th:text="#{import.successLocations(${report.locationsCreated})}">loc</div>
+    </div>
+    <div th:unless="${report.success()}" class="alert alert-danger"
+         th:text="#{import.failed(${report.fileName}, ${report.errors.size()})}">failed</div>
+    <p class="small text-body-secondary" th:if="${report.rowsRead > 0}" th:text="#{import.rowsRead(${report.rowsRead})}">rows</p>
+
+    <div th:unless="${report.errors.isEmpty()}">
+      <h2 class="h5" th:text="#{import.errors}">Errors</h2>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle">
+          <thead><tr>
+            <th th:text="#{import.line}">Line</th>
+            <th th:text="#{import.column}">Column</th>
+            <th th:text="#{import.problem}">Problem</th>
+          </tr></thead>
+          <tbody>
+          <tr th:each="p : ${report.errors}">
+            <td th:text="${p.line > 0} ? ${p.line} : #{common.none}">1</td>
+            <td th:text="${p.column != null} ? #{import.col.__${p.column}__} : #{common.none}">col</td>
+            <td th:text="${#messages.msgWithParams(p.messageKey, p.argsArray())}">problem</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div th:unless="${report.warnings.isEmpty()}">
+      <h2 class="h6 mt-3" th:text="#{import.warnings}">Warnings</h2>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle small">
+          <tbody>
+          <tr th:each="p : ${report.warnings}">
+            <td th:text="${p.line > 0} ? ${p.line} : #{common.none}">1</td>
+            <td th:text="${p.column != null} ? #{import.col.__${p.column}__} : #{common.none}">col</td>
+            <td th:text="${#messages.msgWithParams(p.messageKey, p.argsArray())}">warning</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="h5" th:text="#{import.recent}">Recent</h2>
+  <p th:if="${batches.isEmpty()}" class="text-body-secondary" th:text="#{common.empty}">Empty</p>
+  <table class="table table-sm" th:unless="${batches.isEmpty()}">
+    <thead><tr>
+      <th th:text="#{common.when}">When</th>
+      <th th:text="#{import.batch.file}">File</th>
+      <th th:text="#{common.who}">Who</th>
+      <th class="text-end" th:text="#{import.batch.rows}">Rows</th>
+      <th class="text-end" th:text="#{import.batch.locations}">Locations</th>
+    </tr></thead>
+    <tbody>
+    <tr th:each="b : ${batches}">
+      <td th:text="${@fmt.dateTime(b.importedAt)}">date</td>
+      <td th:text="${b.fileName}">file</td>
+      <td th:text="${b.importedBy}">who</td>
+      <td class="text-end" th:text="${b.rowsImported}">0</td>
+      <td class="text-end" th:text="${b.locationsCreated}">0</td>
+    </tr>
+    </tbody>
+  </table>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

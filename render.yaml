@@ -1,0 +1,30 @@
+# Render Blueprint: Render reads this file when you choose "New → Blueprint" and connect the repo.
+# It creates one free web service built from the Dockerfile. The database lives on Neon (free,
+# no expiry); see docs/deployment.md for the step-by-step guide.
+services:
+  - type: web
+    name: qr-asset-manager
+    runtime: docker
+    plan: free
+    region: frankfurt
+    healthCheckPath: /actuator/health
+    # Deploy a new version only after the GitHub Actions checks on main are green.
+    autoDeployTrigger: checksPass
+    envVars:
+      # Values marked sync: false are typed in the Render dashboard, never stored in Git.
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: APP_BASE_URL
+        sync: false
+      - key: ADMIN_INITIAL_PASSWORD
+        sync: false
+      # "demo" fills an empty database with fictional data and creates the demo accounts.
+      # Remove it before entering real data.
+      - key: SPRING_PROFILES_ACTIVE
+        value: demo
+      - key: DEMO_PASSWORD
+        sync: false

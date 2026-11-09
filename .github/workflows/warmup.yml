@@ -1,0 +1,32 @@
+# Free hosting puts the app to sleep after ~15 minutes without visitors; the first request then
+# takes about a minute. Run this by hand (Actions → Warm up → Run workflow) ~10 minutes before
+# a demo, so the app is awake when people start scanning.
+name: Warm up
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Base URL of the deployed app (e.g. https://qr-asset-manager.onrender.com)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  warmup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake the app and wait until it is healthy
+        env:
+          BASE_URL: ${{ inputs.url }}
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fs --max-time 20 "$BASE_URL/actuator/health" | grep -q '"UP"'; then
+              echo "Awake after attempt $i."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::The app did not answer healthy within 5 minutes."
+          exit 1

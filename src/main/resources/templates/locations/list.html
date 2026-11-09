@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="sq">
+<head th:replace="~{fragments/layout :: head(#{location.list.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container" style="max-width: 760px">
+  <div th:replace="~{fragments/layout :: flash}"></div>
+  <h1 class="h3 mb-3" th:text="#{location.list.title}">Locations</h1>
+
+  <form class="row g-2 mb-4" th:action="@{/locations}" method="post" sec:authorize="hasAnyRole('ADMIN','IT_STAFF')">
+    <div class="col-sm-9">
+      <input class="form-control" name="name" maxlength="120" required th:placeholder="#{location.namePlaceholder}"
+             th:attr="aria-label=#{location.name}">
+    </div>
+    <div class="col-sm-3 d-grid">
+      <button class="btn btn-primary" type="submit" th:text="#{common.add}">Add</button>
+    </div>
+  </form>
+
+  <table class="table table-hover align-middle">
+    <thead><tr>
+      <th th:text="#{location.name}">Name</th>
+      <th class="text-end" th:text="#{location.assetCount}">Assets</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+    <tr th:if="${locations.isEmpty()}"><td colspan="3" class="text-body-secondary" th:text="#{common.empty}">Empty</td></tr>
+    <tr th:each="l : ${locations}">
+      <td><a th:href="@{/assets(location=${l.id})}" th:text="${l.name}">name</a></td>
+      <td class="text-end" th:text="${counts.getOrDefault(l.id, 0L)}">0</td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-dark" sec:authorize="hasAnyRole('ADMIN','IT_STAFF')"
+           th:href="@{/labels(location=${l.id})}" th:text="#{nav.labels}">Labels</a>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

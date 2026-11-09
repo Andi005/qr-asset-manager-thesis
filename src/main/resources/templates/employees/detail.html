@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="sq">
+<head th:replace="~{fragments/layout :: head(${employee.fullName})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container">
+  <div th:replace="~{fragments/layout :: flash}"></div>
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+      <h1 class="h3 mb-1" th:text="${employee.fullName}">Name</h1>
+      <div class="text-body-secondary">
+        <span th:text="${employee.department} ?: ''">dep</span>
+        <span th:if="${employee.email != null}" th:text="' · ' + ${employee.email}">mail</span>
+      </div>
+    </div>
+    <div class="d-flex gap-2" sec:authorize="hasAnyRole('ADMIN','IT_STAFF')">
+      <a class="btn btn-outline-primary" th:href="@{/employees/{id}/edit(id=${employee.id})}" th:text="#{common.edit}">Edit</a>
+      <form th:action="@{/employees/{id}/active(id=${employee.id})}" method="post">
+        <input type="hidden" name="active" th:value="${!employee.active}">
+        <button class="btn" type="submit" th:classappend="${employee.active} ? 'btn-outline-danger' : 'btn-outline-success'"
+                th:text="${employee.active} ? #{employee.deactivate} : #{employee.activate}">toggle</button>
+      </form>
+    </div>
+  </div>
+  <div th:unless="${employee.active}" class="alert alert-secondary" th:text="#{employee.inactiveNote}">Inactive</div>
+
+  <h2 class="h5" th:text="#{employee.assets}">Assets</h2>
+  <p th:if="${assignments.isEmpty()}" class="text-body-secondary" th:text="#{common.empty}">Empty</p>
+  <div class="table-responsive mb-4" th:unless="${assignments.isEmpty()}">
+    <table class="table table-sm align-middle">
+      <thead><tr>
+        <th th:text="#{asset.field.tag}">Tag</th>
+        <th th:text="#{asset.field.name}">Device</th>
+        <th th:text="#{assignment.from}">From</th>
+        <th th:text="#{assignment.to}">To</th>
+      </tr></thead>
+      <tbody>
+      <tr th:each="h : ${assignments}" th:classappend="${h.open} ? 'table-primary'">
+        <td><a class="font-monospace" th:href="@{/assets/{id}(id=${h.asset.id})}" th:text="${h.asset.tag}">tag</a></td>
+        <td th:text="${h.asset.displayName}">device</td>
+        <td class="text-nowrap" th:text="${@fmt.dateTime(h.assignedAt)}">from</td>
+        <td class="text-nowrap" th:text="${h.open} ? #{assignment.current} : ${@fmt.dateTime(h.returnedAt)}">to</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="h5" th:text="#{employee.licenses}">Licenses</h2>
+  <p th:if="${licenses.isEmpty()}" class="text-body-secondary" th:text="#{common.empty}">Empty</p>
+  <ul class="list-group mb-4" th:unless="${licenses.isEmpty()}">
+    <li class="list-group-item d-flex justify-content-between" th:each="l : ${licenses}">
+      <a th:href="@{/licenses/{id}(id=${l.license.id})}" th:text="${l.license.name}">license</a>
+      <span class="small text-body-secondary" th:text="${@fmt.date(l.license.expiryDate)}">date</span>
+    </li>
+  </ul>
+
+  <h2 class="h5" th:text="#{asset.changes}">Changes</h2>
+  <div th:replace="~{fragments/layout :: changes(${changes})}"></div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

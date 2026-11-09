@@ -1,0 +1,107 @@
+/* Small additions on top of Bootstrap. */
+main.container {
+  max-width: 1140px;
+}
+
+.stat-card .stat-value {
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.stat-card .stat-label {
+  color: var(--bs-secondary-color);
+  font-size: 0.85rem;
+}
+
+a.card {
+  color: inherit;
+}
+
+a.card:hover {
+  border-color: var(--bs-primary);
+}
+
+/* Scanning: phone first, portrait, big targets. */
+.scan-page {
+  max-width: 560px;
+}
+
+.scan-reader {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #111;
+}
+
+.scan-reader:empty {
+  display: none;
+}
+
+.asset-list {
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+/* QR label sheet: on screen a grid; on paper A4 with labels about 6.3 x 3.8 cm. */
+.label-sheet {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.3cm, 1fr));
+  gap: 0.3cm;
+}
+
+.qr-label {
+  display: flex;
+  align-items: center;
+  gap: 0.25cm;
+  height: 3.8cm;
+  padding: 0.2cm;
+  border: 1px dashed #bbb;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  background: #fff;
+  color: #000;
+}
+
+.qr-label img {
+  width: 3.3cm;
+  height: 3.3cm;
+  image-rendering: pixelated;
+}
+
+.qr-label-tag {
+  font-family: var(--bs-font-monospace);
+  font-weight: 700;
+  font-size: 13pt;
+}
+
+.qr-label-model {
+  font-size: 8pt;
+  line-height: 1.2;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  main.container {
+    max-width: none;
+    padding: 0;
+  }
+
+  .label-sheet {
+    grid-template-columns: repeat(3, 6.3cm);
+  }
+
+  .qr-label {
+    border-color: #ddd;
+  }
+}
