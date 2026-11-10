@@ -50,6 +50,8 @@ class InventoryApiController {
       List<AssetRow> unexpected,
       int unknown,
       int duplicates,
+      int manualEntries,
+      int typedCharacters,
       List<ScanEntry> scans) {}
 
   record ScanResponse(String result, String resultLabel, String tag, String name, State state) {}
@@ -110,6 +112,8 @@ class InventoryApiController {
         rows(r.unexpected()),
         r.unknownScans(),
         r.duplicateScans(),
+        r.manualEntries(),
+        r.typedCharacters(),
         scans);
   }
 

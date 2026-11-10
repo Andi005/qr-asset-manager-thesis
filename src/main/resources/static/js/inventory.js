@@ -61,6 +61,9 @@
     document.getElementById("count-unexpected").textContent = state.unexpected.length;
     document.getElementById("count-unknown").textContent = state.unknown;
     document.getElementById("count-duplicates").textContent = state.duplicates;
+    var summary = document.getElementById("manual-summary");
+    summary.textContent = summary.dataset.labelManual + ": " + state.manualEntries + " · " +
+      summary.dataset.labelTyped + ": " + state.typedCharacters;
     fillList("list-missing", state.missing, false);
     fillList("list-found", state.found, false);
     fillList("list-unexpected", state.unexpected, true);

@@ -68,6 +68,16 @@ class InventoryApiTest {
         .perform(scan(id, "not a label"))
         .andExpect(jsonPath("$.result").value("UNKNOWN"))
         .andExpect(jsonPath("$.state.unknown").value(1));
+    // A value typed by hand counts as manual entry, with its characters (the P2 typing measure).
+    mockMvc
+        .perform(
+            post("/api/inventory/{id}/scans", id)
+                .with(user("it").roles("IT_STAFF"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"raw\":\"abc\",\"manual\":true}"))
+        .andExpect(jsonPath("$.state.manualEntries").value(1))
+        .andExpect(jsonPath("$.state.typedCharacters").value(3));
 
     mockMvc
         .perform(post("/inventory/{id}/finish", id).with(user("it").roles("IT_STAFF")).with(csrf()))

@@ -116,7 +116,8 @@
            th:text="#{inventory.exportSummary}">Summary</a>
         <a class="btn btn-outline-secondary btn-sm" th:href="@{/inventory/{id}/scans.csv(id=${s.id})}"
            th:text="#{inventory.exportScans}">Scans</a>
-        <span class="small text-body-secondary align-self-center"
+        <span class="small text-body-secondary align-self-center" id="manual-summary"
+              th:data-label-manual="#{inventory.counts.manual}" th:data-label-typed="#{inventory.counts.typed}"
               th:text="#{inventory.counts.manual} + ': ' + ${report.manualEntries} + ' · ' + #{inventory.counts.typed} + ': ' + ${report.typedCharacters}">manual</span>
       </div>
     </div>
